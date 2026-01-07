@@ -697,6 +697,21 @@ public class JVMMethodExecutor implements MethodExecutor {
                         result = ExceptionUtils.newException(context, Types.NULL_POINTER_EXCEPTION, "Tried to invoke method on null object");
                     } else {
                         ExecutorObject ownerObject = ownerElement.value();
+
+                        // Special handling for lambda proxy objects
+                        if (ownerObject instanceof net.lenni0451.minijvm.execution.natives.LambdaMetafactoryNatives.LambdaProxyObject lambdaProxy) {
+                            // Check if this is the SAM method call
+                            if (methodInsnNode.name.equals(lambdaProxy.getSamMethodName())) {
+                                ExecutionResult invokeResult = lambdaProxy.invokeSam(context, stackElements.toArray(new StackElement[0]));
+                                if (invokeResult.hasReturnValue()) {
+                                    stack.pushSized(invokeResult.getReturnValue());
+                                } else if (invokeResult.hasException()) {
+                                    result = invokeResult;
+                                }
+                                break;
+                            }
+                        }
+
                         //TODO: Interface checks
                         ExecutorClass.ResolvedMethod methodNode;
                         if (opcode == Opcodes.INVOKESPECIAL) {

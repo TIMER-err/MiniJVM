@@ -76,6 +76,7 @@ public class ExecutionManager {
         this.accept(new MethodHandlesNatives());
         this.accept(new LambdaMetafactoryNatives());
         this.accept(new StringConcatFactoryNatives());
+        this.accept(new VMNatives());
     }
 
     public MemoryStorage getMemoryStorage() {
