@@ -57,6 +57,15 @@ public class ReflectionNatives implements Consumer<ExecutionManager> {
                 new net.lenni0451.minijvm.object.types.ArrayObject(executionContext, arrayClass, new net.lenni0451.minijvm.stack.StackElement[0]);
             return returnValue(new StackObject(emptyArray));
         });
+
+        // Class.getDeclaredField0(String) - returns a declared field by name
+        manager.registerMethodExecutor("java/lang/Class.getDeclaredField0(Ljava/lang/String;)Ljava/lang/reflect/Field;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // For now, throw NoSuchFieldException to match expected behavior when field not found
+            // In a full implementation, this would return the actual Field object
+            return net.lenni0451.minijvm.utils.ExceptionUtils.newException(executionContext,
+                org.objectweb.asm.Type.getObjectType("java/lang/NoSuchFieldException"),
+                "Field not found (stub implementation)");
+        });
     }
 
 }

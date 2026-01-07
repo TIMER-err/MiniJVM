@@ -5,21 +5,28 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 
 public class UnsafeUtils {
 
     @Nullable
     public static FieldNode getFieldByName(final ExecutorClass executorClass, final String name) {
-        for (FieldNode field : executorClass.getClassNode().fields) {
-            if (field.name.equals(name)) return field;
+        // Search in current class and all superclasses
+        for (Map.Entry<String, ExecutorClass> entry : executorClass.getSuperClasses().entrySet()) {
+            for (FieldNode field : entry.getValue().getClassNode().fields) {
+                if (field.name.equals(name)) return field;
+            }
         }
         return null;
     }
 
     @Nullable
     public static FieldNode getFieldByHashCode(final ExecutorClass executorClass, final long hashCode) {
-        for (FieldNode field : executorClass.getClassNode().fields) {
-            if (getFieldHashCode(field) == hashCode) return field;
+        // Search in current class and all superclasses
+        for (Map.Entry<String, ExecutorClass> entry : executorClass.getSuperClasses().entrySet()) {
+            for (FieldNode field : entry.getValue().getClassNode().fields) {
+                if (getFieldHashCode(field) == hashCode) return field;
+            }
         }
         return null;
     }

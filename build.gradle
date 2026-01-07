@@ -151,3 +151,10 @@ project.tasks.withType(PublishToMavenRepository).forEach {
     it.dependsOn(project.tasks.withType(Sign))
 }
 build.dependsOn(check)
+
+task runObfTest(type: JavaExec) {
+    group = 'verification'
+    description = 'Run obfuscated JAR test'
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+    mainClass = 'test.ObfTestRunner'
+}

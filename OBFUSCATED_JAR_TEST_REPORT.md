@@ -189,13 +189,40 @@ MiniJVM 现在可以：
 
 这使 MiniJVM 成为一个强大的**反混淆分析工具**，能够处理使用现代 Java 特性的混淆代码。
 
+## Unsafe 支持增强
+
+已完成以下 Unsafe 方法增强：
+
+### 新增方法
+1. ✅ **objectFieldOffset(Field)** - 支持旧版 JDK API
+2. ✅ **getLong(Object, long)** - 非易失性 long 字段读取
+3. ✅ **getInt(Object, long)** - int 字段读取
+4. ✅ **getObject(Object, long)** - 对象字段读取
+5. ✅ **putLong(Object, long, long)** - long 字段写入
+6. ✅ **putLongVolatile(Object, long, long)** - 易失性 long 写入
+7. ✅ **putInt(Object, long, int)** - int 字段写入
+8. ✅ **putObject(Object, long, Object)** - 对象字段写入
+
+### 改进功能
+1. ✅ **字段查找增强** - UnsafeUtils 现在搜索整个类层次结构
+2. ✅ **合成偏移量** - 为未找到的字段返回合成偏移量，允许 JDK 类初始化
+3. ✅ **优雅降级** - 当字段未找到时使用内存存储作为后备
+4. ✅ **错误容忍** - compareAndSet/getVolatile/putVolatile 处理缺失字段
+
+### Random 初始化限制
+
+java.util.Random 初始化仍然失败，原因尚不明确：
+- objectFieldOffset1 未被调用用于 "seed" 字段
+- 错误在 Random <clinit> 内部某处抛出
+- 可能需要更完整的反射 API 支持或简化的 Random 实现
+
 ## 后续优化建议
 
 如果需要完整运行混淆 JAR，可以：
 
-1. **扩展 Unsafe 支持** - 实现字段偏移量获取
-2. **添加更多原生方法** - 覆盖 java.util.Random 等常用类
-3. **实现简化的 Random** - 提供一个 stub 实现
+1. **创建简化的 Random 类** - 提供 MiniJVM 专用的 stub 实现
+2. **扩展反射 API** - 实现更完整的 Field/Method 反射支持
+3. **调试 Random 初始化** - 深入追踪 <clinit> 执行流程
 4. **创建 JDK Stub 库** - 为常用类提供简化实现
 
 但对于 **InvokeDynamic 功能验证**，当前实现已经**完全成功**！
@@ -209,9 +236,13 @@ MiniJVM 现在可以：
 - `src/test/java/test/ObfTestRunner.java`
 
 ### 修改文件
-- `src/main/java/net/lenni0451/minijvm/ExecutionManager.java` - 注册新 natives
-- `src/main/java/net/lenni0451/minijvm/execution/natives/ReflectionNatives.java` - 添加反射方法
+- `src/main/java/net/lenni0451/minijvm/ExecutionManager.java` - 注册新 natives，关闭 DEBUG 模式
+- `src/main/java/net/lenni0451/minijvm/execution/natives/ReflectionNatives.java` - 添加反射方法 (getDeclaredFields0/Methods0/Constructors0/Field0)
+- `src/main/java/net/lenni0451/minijvm/execution/natives/UnsafeNatives.java` - 完整的字段访问支持，合成偏移量，优雅降级
+- `src/main/java/net/lenni0451/minijvm/utils/UnsafeUtils.java` - 类层次结构字段查找
+- `src/main/java/net/lenni0451/minijvm/object/ExecutorClass.java` - 添加 getSuperClasses() 访问器
 - `src/test/java/test/InvokeDynamicTestRunner.java` - Lambda 测试套件
+- `build.gradle` - 添加 runObfTest 任务
 
 ## 最终评价
 

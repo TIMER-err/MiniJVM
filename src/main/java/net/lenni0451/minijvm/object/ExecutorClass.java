@@ -49,6 +49,10 @@ public class ExecutorClass {
         return this.classNode;
     }
 
+    public Map<String, ExecutorClass> getSuperClasses() {
+        return this.superClasses;
+    }
+
     @SneakyThrows
     private void initSuperClasses(final ExecutionContext context) {
         Stack<ExecutorClass> stack = new Stack<>();
