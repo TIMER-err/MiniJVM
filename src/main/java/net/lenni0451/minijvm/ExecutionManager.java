@@ -31,7 +31,7 @@ import java.util.function.IntFunction;
  */
 public class ExecutionManager {
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     private final ClassPool classPool;
     private final Map<Type, ExecutorClass> loadedClasses;
@@ -77,6 +77,8 @@ public class ExecutionManager {
         this.accept(new LambdaMetafactoryNatives());
         this.accept(new StringConcatFactoryNatives());
         this.accept(new VMNatives());
+        this.accept(new SecurityNatives());
+        this.accept(new AtomicNatives());
     }
 
     public MemoryStorage getMemoryStorage() {

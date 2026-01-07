@@ -26,6 +26,37 @@ public class ReflectionNatives implements Consumer<ExecutionManager> {
             }
             return returnValue(new StackObject(executionContext.getExecutionManager().instantiateClass(executionContext, firstFrame.getExecutorClass())));
         });
+
+        // Class.getDeclaredFields0(boolean) - returns declared fields
+        manager.registerMethodExecutor("java/lang/Class.getDeclaredFields0(Z)[Ljava/lang/reflect/Field;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // For simplicity, return an empty Field array
+            // In a full implementation, this would return actual fields of the class
+            net.lenni0451.minijvm.object.ExecutorClass arrayClass =
+                executionContext.getExecutionManager().loadClass(executionContext, org.objectweb.asm.Type.getType("[Ljava/lang/reflect/Field;"));
+            net.lenni0451.minijvm.object.types.ArrayObject emptyArray =
+                new net.lenni0451.minijvm.object.types.ArrayObject(executionContext, arrayClass, new net.lenni0451.minijvm.stack.StackElement[0]);
+            return returnValue(new StackObject(emptyArray));
+        });
+
+        // Class.getDeclaredMethods0(boolean) - returns declared methods
+        manager.registerMethodExecutor("java/lang/Class.getDeclaredMethods0(Z)[Ljava/lang/reflect/Method;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return an empty Method array
+            net.lenni0451.minijvm.object.ExecutorClass arrayClass =
+                executionContext.getExecutionManager().loadClass(executionContext, org.objectweb.asm.Type.getType("[Ljava/lang/reflect/Method;"));
+            net.lenni0451.minijvm.object.types.ArrayObject emptyArray =
+                new net.lenni0451.minijvm.object.types.ArrayObject(executionContext, arrayClass, new net.lenni0451.minijvm.stack.StackElement[0]);
+            return returnValue(new StackObject(emptyArray));
+        });
+
+        // Class.getDeclaredConstructors0(boolean) - returns declared constructors
+        manager.registerMethodExecutor("java/lang/Class.getDeclaredConstructors0(Z)[Ljava/lang/reflect/Constructor;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return an empty Constructor array
+            net.lenni0451.minijvm.object.ExecutorClass arrayClass =
+                executionContext.getExecutionManager().loadClass(executionContext, org.objectweb.asm.Type.getType("[Ljava/lang/reflect/Constructor;"));
+            net.lenni0451.minijvm.object.types.ArrayObject emptyArray =
+                new net.lenni0451.minijvm.object.types.ArrayObject(executionContext, arrayClass, new net.lenni0451.minijvm.stack.StackElement[0]);
+            return returnValue(new StackObject(emptyArray));
+        });
     }
 
 }

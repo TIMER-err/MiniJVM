@@ -1,0 +1,4 @@
+task runInvokeDynamicTest(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+    mainClass = 'test.InvokeDynamicTest'
+}
