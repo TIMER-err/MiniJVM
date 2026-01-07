@@ -7,6 +7,8 @@ import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.object.types.ArrayObject;
+import net.lenni0451.minijvm.object.types.MethodHandleObject;
+import net.lenni0451.minijvm.object.types.MethodTypeObject;
 import net.lenni0451.minijvm.stack.*;
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
@@ -49,12 +51,12 @@ public class ExecutorTypeUtils {
         } else if (jvmObject instanceof Type t) {
             ExecutorClass typeClass = manager.loadClass(context, t);
             return new StackObject(manager.instantiateClass(context, typeClass));
-        } else if (jvmObject instanceof Handle) {
-            //TODO: Convert to executor object
-            throw new UnsupportedOperationException("Unsupported field value type: " + jvmObject.getClass().getName());
-        } else if (jvmObject instanceof ConstantDynamic) {
-            //TODO: Convert to executor object
-            throw new UnsupportedOperationException("Unsupported field value type: " + jvmObject.getClass().getName());
+        } else if (jvmObject instanceof Handle h) {
+            // Convert ASM Handle to MethodHandleObject
+            return new StackObject(new MethodHandleObject(context, h));
+        } else if (jvmObject instanceof ConstantDynamic cd) {
+            // Resolve ConstantDynamic by invoking its bootstrap method
+            return resolveConstantDynamic(context, cd);
         } else {
             throw new UnsupportedOperationException("Unsupported field value type: " + jvmObject.getClass().getName());
         }
@@ -113,6 +115,56 @@ public class ExecutorTypeUtils {
         ExecutorClass arrayClass = context.getExecutionManager().loadClass(context, type);
         ExecutorObject arrayObject = context.getExecutionManager().instantiateArray(context, arrayClass, elements);
         return new StackObject(arrayObject);
+    }
+
+    /**
+     * Resolve a ConstantDynamic by invoking its bootstrap method.
+     */
+    private static StackElement resolveConstantDynamic(final ExecutionContext context, final ConstantDynamic cd) {
+        // Get bootstrap method handle
+        Handle bsm = cd.getBootstrapMethod();
+        MethodHandleObject bsmHandle = new MethodHandleObject(context, bsm);
+
+        // Prepare bootstrap method arguments:
+        // 1. MethodHandles.Lookup caller (we'll use a simplified version)
+        // 2. String name
+        // 3. Class<?> type
+        // 4. ...static arguments
+
+        java.util.List<StackElement> bsmArgList = new java.util.ArrayList<>();
+
+        // 1. Lookup - create a simple lookup object
+        // For now, we'll pass null as lookup since we don't have the caller class context here
+        // This is a simplification; full implementation would need caller class
+        bsmArgList.add(StackObject.NULL);
+
+        // 2. Name (String)
+        bsmArgList.add(parse(context, cd.getName()));
+
+        // 3. Type (Class)
+        Type constantType = Type.getType(cd.getDescriptor());
+        ExecutorClass typeClass = context.getExecutionManager().loadClass(context, constantType);
+        bsmArgList.add(new StackObject(context.getExecutionManager().instantiateClass(context, typeClass)));
+
+        // 4. Static arguments
+        for (int i = 0; i < cd.getBootstrapMethodArgumentCount(); i++) {
+            Object arg = cd.getBootstrapMethodArgument(i);
+            bsmArgList.add(parse(context, arg));
+        }
+
+        // Invoke the bootstrap method
+        StackElement[] bsmArgs = bsmArgList.toArray(new StackElement[0]);
+        net.lenni0451.minijvm.execution.ExecutionResult result = bsmHandle.invoke(context, bsmArgs);
+
+        if (result.hasException()) {
+            throw new RuntimeException("ConstantDynamic bootstrap method threw exception");
+        }
+
+        if (!result.hasReturnValue()) {
+            throw new RuntimeException("ConstantDynamic bootstrap method did not return a value");
+        }
+
+        return result.getReturnValue();
     }
 
 }

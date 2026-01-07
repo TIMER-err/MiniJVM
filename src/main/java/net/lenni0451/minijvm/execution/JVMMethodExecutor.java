@@ -7,6 +7,8 @@ import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.object.types.ArrayObject;
+import net.lenni0451.minijvm.object.types.CallSiteObject;
+import net.lenni0451.minijvm.object.types.MethodHandleObject;
 import net.lenni0451.minijvm.stack.*;
 import net.lenni0451.minijvm.utils.ExceptionUtils;
 import net.lenni0451.minijvm.utils.ExecutorStack;
@@ -750,7 +752,51 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     break;
                 case Opcodes.INVOKEDYNAMIC:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    InvokeDynamicInsnNode indyNode = (InvokeDynamicInsnNode) currentInstruction;
+
+                    // Get or create CallSite from cache
+                    InvokeDynamicCache cache = manager.getInvokeDynamicCache();
+                    String className = currentClass.getClassNode().name;
+                    String methodSignature = currentMethod.name + currentMethod.desc;
+                    int instructionIndex = currentMethod.instructions.indexOf(currentInstruction);
+
+                    CallSiteObject callSite = cache.get(className, methodSignature, instructionIndex);
+                    if (callSite == null) {
+                        // Bootstrap method not yet invoked - resolve the call site
+                        callSite = BootstrapMethodResolver.resolve(context, indyNode, currentClass);
+                        cache.put(className, methodSignature, instructionIndex, callSite);
+                    }
+
+                    // Get target MethodHandle from CallSite
+                    MethodHandleObject target = callSite.getTarget();
+                    if (target == null) {
+                        result = ExceptionUtils.newException(context, Types.NULL_POINTER_EXCEPTION, "CallSite target is null");
+                        break;
+                    }
+
+                    // Pop arguments from stack (same pattern as other invokes)
+                    Type[] indyArgTypes = Type.getArgumentTypes(indyNode.desc);
+                    List<StackElement> indyArgs = new ArrayList<>(indyArgTypes.length);
+                    for (int i = indyArgTypes.length - 1; i >= 0; i--) {
+                        StackElement arg = stack.popSized();
+                        verifyType(context, arg, ExecutorTypeUtils.typeToStackType(indyArgTypes[i]));
+                        indyArgs.add(0, arg);
+                    }
+
+                    // Invoke the method handle
+                    ExecutionResult indyResult = target.invoke(context, indyArgs.toArray(new StackElement[0]));
+
+                    // Handle return value or exception
+                    if (indyResult.hasException()) {
+                        result = indyResult;
+                    } else if (indyResult.hasReturnValue()) {
+                        Type returnType = Type.getReturnType(indyNode.desc);
+                        if (!returnType.equals(Type.VOID_TYPE)) {
+                            verifyType(context, indyResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(returnType));
+                            stack.pushSized(indyResult.getReturnValue());
+                        }
+                    }
+                    break;
                 case Opcodes.NEW:
                     TypeInsnNode typeInsnNode = (TypeInsnNode) currentInstruction;
                     ExecutorClass newClass = manager.loadClass(context, Type.getObjectType(typeInsnNode.desc));

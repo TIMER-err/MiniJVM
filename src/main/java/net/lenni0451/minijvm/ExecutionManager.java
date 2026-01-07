@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.commons.asm.provider.ClassProvider;
 import net.lenni0451.minijvm.exception.ExecutorException;
+import net.lenni0451.minijvm.execution.InvokeDynamicCache;
 import net.lenni0451.minijvm.execution.JVMMethodExecutor;
 import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.execution.natives.*;
@@ -37,6 +38,7 @@ public class ExecutionManager {
     private final Map<ExecutorClass, ExecutorObject> classInstances;
     private final Map<String, MethodExecutor> methodExecutors;
     private final MemoryStorage memoryStorage;
+    private final InvokeDynamicCache invokeDynamicCache;
 
     public ExecutionManager(final ClassProvider classProvider) {
         this(new ClassPool(classProvider));
@@ -48,6 +50,7 @@ public class ExecutionManager {
         this.classInstances = new HashMap<>();
         this.methodExecutors = new HashMap<>();
         this.memoryStorage = new MemoryStorage();
+        this.invokeDynamicCache = new InvokeDynamicCache();
 
         this.registerMethodExecutor(null, new JVMMethodExecutor());
         this.accept(new ClassNatives());
@@ -70,10 +73,17 @@ public class ExecutionManager {
         this.accept(new ScopedMemoryAccessNatives());
         this.accept(new SignalNatives());
         this.accept(new AccessControllerNatives());
+        this.accept(new MethodHandlesNatives());
+        this.accept(new LambdaMetafactoryNatives());
+        this.accept(new StringConcatFactoryNatives());
     }
 
     public MemoryStorage getMemoryStorage() {
         return this.memoryStorage;
+    }
+
+    public InvokeDynamicCache getInvokeDynamicCache() {
+        return this.invokeDynamicCache;
     }
 
     public ExecutionContext newContext() {

@@ -1,8 +1,10 @@
 package net.lenni0451.minijvm.utils;
 
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
-public class Types extends net.lenni0451.commons.asm.Types {
+public class Types {
 
     public static final Type CLASS = Type.getType(Class.class);
     public static final Type OBJECT = Type.getType(Object.class);
@@ -21,6 +23,11 @@ public class Types extends net.lenni0451.commons.asm.Types {
     public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType(IllegalArgumentException.class);
     public static final Type NEGATIVE_ARRAY_SIZE_EXCEPTION = Type.getType(NegativeArraySizeException.class);
     public static final Type CLASS_CAST_EXCEPTION = Type.getType(ClassCastException.class);
+    public static final Type BOOTSTRAP_METHOD_ERROR = Type.getObjectType("java/lang/BootstrapMethodError");
+    public static final Type WRONG_METHOD_TYPE_EXCEPTION = Type.getObjectType("java/lang/invoke/WrongMethodTypeException");
+    public static final Type METHOD_HANDLE = Type.getObjectType("java/lang/invoke/MethodHandle");
+    public static final Type METHOD_TYPE = Type.getObjectType("java/lang/invoke/MethodType");
+    public static final Type CALL_SITE = Type.getObjectType("java/lang/invoke/CallSite");
 
     public static Type asArray(final Type type, final int dimensions) {
         if (dimensions < 0) throw new IllegalArgumentException("Dimensions must be greater or equal to 0");
@@ -31,6 +38,27 @@ public class Types extends net.lenni0451.commons.asm.Types {
         if (type.getSort() != Type.ARRAY) throw new IllegalArgumentException("Type is not an array");
         if (type.getDimensions() == 1) return type.getElementType();
         else return Type.getType(type.getDescriptor().substring(1));
+    }
+
+    // Delegate methods from net.lenni0451.commons.asm.Types
+    public static Type[] argumentTypes(final MethodInsnNode methodInsnNode) {
+        return net.lenni0451.commons.asm.Types.argumentTypes(methodInsnNode);
+    }
+
+    public static Type[] argumentTypes(final MethodNode methodNode) {
+        return net.lenni0451.commons.asm.Types.argumentTypes(methodNode);
+    }
+
+    public static Type returnType(final MethodInsnNode methodInsnNode) {
+        return net.lenni0451.commons.asm.Types.returnType(methodInsnNode);
+    }
+
+    public static Type returnType(final MethodNode methodNode) {
+        return net.lenni0451.commons.asm.Types.returnType(methodNode);
+    }
+
+    public static boolean isPrimitive(final Type type) {
+        return net.lenni0451.commons.asm.Types.isPrimitive(type);
     }
 
 }
