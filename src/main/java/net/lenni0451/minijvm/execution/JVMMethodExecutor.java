@@ -694,7 +694,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     StackObject ownerElement = stack.popSized(StackObject.class);
                     if (ownerElement.isNull()) {
-                        result = ExceptionUtils.newException(context, Types.NULL_POINTER_EXCEPTION, "Tried to invoke method on null object");
+                        System.err.println("DEBUG: Null pointer when trying to call: " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
+                        result = ExceptionUtils.newException(context, Types.NULL_POINTER_EXCEPTION, "Tried to invoke method on null object: " + methodInsnNode.owner + "." + methodInsnNode.name);
                     } else {
                         ExecutorObject ownerObject = ownerElement.value();
 

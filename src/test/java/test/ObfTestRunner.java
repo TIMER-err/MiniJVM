@@ -80,7 +80,45 @@ public class ObfTestRunner {
                     System.err.println("  (Could not retrieve message: " + e.getMessage() + ")");
                 }
 
+                // Try to get cause
+                try {
+                    net.lenni0451.minijvm.object.ExecutorClass.ResolvedMethod getCauseMethod =
+                        exception.getClazz().findMethod(context, "getCause", "()Ljava/lang/Throwable;");
+                    if (getCauseMethod != null) {
+                        ExecutionResult causeResult = Executor.execute(context, getCauseMethod.owner(),
+                            getCauseMethod.method(), exception);
+                        if (causeResult.hasReturnValue() && !causeResult.getReturnValue().isNull()) {
+                            net.lenni0451.minijvm.stack.StackObject causeObj = (net.lenni0451.minijvm.stack.StackObject) causeResult.getReturnValue();
+                            System.err.println("  Cause: " + causeObj.value().getClazz().getClassNode().name);
+
+                            // Get cause message
+                            net.lenni0451.minijvm.object.ExecutorClass.ResolvedMethod causeGetMessageMethod =
+                                causeObj.value().getClazz().findMethod(context, "getMessage", "()Ljava/lang/String;");
+                            if (causeGetMessageMethod != null) {
+                                ExecutionResult causeMsgResult = Executor.execute(context, causeGetMessageMethod.owner(),
+                                    causeGetMessageMethod.method(), causeObj.value());
+                                if (causeMsgResult.hasReturnValue() && !causeMsgResult.getReturnValue().isNull()) {
+                                    net.lenni0451.minijvm.stack.StackObject causeMsgObj = (net.lenni0451.minijvm.stack.StackObject) causeMsgResult.getReturnValue();
+                                    String causeMessage = net.lenni0451.minijvm.utils.ExecutorTypeUtils.fromExecutorString(context, causeMsgObj.value());
+                                    System.err.println("  Cause message: " + causeMessage);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore
+                }
+
                 System.err.println("  Exception object: " + exception);
+
+                // Print stack frames
+                System.err.println("\n  Stack trace:");
+                net.lenni0451.minijvm.ExecutionContext.StackFrame[] frames = context.getStackFrames();
+                for (int i = frames.length - 1; i >= Math.max(0, frames.length - 10); i--) {
+                    net.lenni0451.minijvm.ExecutionContext.StackFrame frame = frames[i];
+                    System.err.println("    at " + frame.getExecutorClass().getClassNode().name + "." +
+                        frame.getMethodNode().name + frame.getMethodNode().desc);
+                }
             } else {
                 System.out.println("Execution completed successfully!");
             }

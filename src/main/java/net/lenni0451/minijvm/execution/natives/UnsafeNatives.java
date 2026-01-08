@@ -38,7 +38,15 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(new StackInt(ARRAY_BASE_OFFSET));
         });
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            return returnValue(new StackInt(ARRAY_BASE_OFFSET));
+        });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ClassObject executorClass = (ClassObject) ((StackObject) arguments[0]).value();
+            Type type = Types.arrayType(executorClass.getClassType().getType());
+            return returnValue(new StackInt(UnsafeUtils.arrayIndexScale(type)));
+        });
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayIndexScale(Ljava/lang/Class;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             ClassObject executorClass = (ClassObject) ((StackObject) arguments[0]).value();
             Type type = Types.arrayType(executorClass.getClassType().getType());
             return returnValue(new StackInt(UnsafeUtils.arrayIndexScale(type)));

@@ -39,5 +39,26 @@ public class VMNatives implements Consumer<ExecutionManager> {
                 return ExecutionResult.returnValue(net.lenni0451.minijvm.stack.StackObject.NULL);
             }
         );
+
+        // Bypass Blocker static initializer
+        manager.registerMethodExecutor("jdk/internal/misc/Blocker.<clinit>()V",
+            (context, currentClass, currentMethod, instance, arguments) -> {
+                return ExecutionResult.voidResult();
+            }
+        );
+
+        // Blocker.begin() - begin blocking operation
+        manager.registerMethodExecutor("jdk/internal/misc/Blocker.begin()J",
+            (context, currentClass, currentMethod, instance, arguments) -> {
+                return ExecutionResult.returnValue(new net.lenni0451.minijvm.stack.StackLong(0L));
+            }
+        );
+
+        // Blocker.end(long) - end blocking operation
+        manager.registerMethodExecutor("jdk/internal/misc/Blocker.end(J)V",
+            (context, currentClass, currentMethod, instance, arguments) -> {
+                return ExecutionResult.voidResult();
+            }
+        );
     }
 }

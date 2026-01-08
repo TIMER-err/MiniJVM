@@ -2,7 +2,9 @@ package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.execution.ExecutionResult;
+import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.stack.StackObject;
+import net.lenni0451.minijvm.stack.StackInt;
 
 import java.util.function.Consumer;
 
@@ -82,5 +84,8 @@ public class SecurityNatives implements Consumer<ExecutionManager> {
                 return ExecutionResult.returnValue(StackObject.NULL);
             }
         );
+
+        // Bypass SecurityConstants static initializer
+        manager.registerMethodExecutor("sun/security/util/SecurityConstants.<clinit>()V", MethodExecutor.NOOP_VOID);
     }
 }

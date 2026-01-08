@@ -22,6 +22,37 @@ public class SystemNatives implements Consumer<ExecutionManager> {
     @Override
     public void accept(ExecutionManager manager) {
         manager.registerMethodExecutor("java/lang/System.registerNatives()V", MethodExecutor.NOOP_VOID);
+
+        // System static initializer - initialize out, err, in
+        manager.registerMethodExecutor("java/lang/System.<clinit>()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Create PrintStream instances for out, err
+            ExecutorClass printStreamClass = executionContext.getExecutionManager().loadClass(executionContext,
+                org.objectweb.asm.Type.getObjectType("java/io/PrintStream"));
+            net.lenni0451.minijvm.object.ExecutorObject outStream =
+                executionContext.getExecutionManager().instantiate(executionContext, printStreamClass);
+            net.lenni0451.minijvm.object.ExecutorObject errStream =
+                executionContext.getExecutionManager().instantiate(executionContext, printStreamClass);
+
+            // Set System.out
+            ExecutorClass.ResolvedField outField = currentClass.findField(executionContext, "out", "Ljava/io/PrintStream;");
+            if (outField != null) {
+                outField.set(new StackObject(outStream));
+            }
+
+            // Set System.err
+            ExecutorClass.ResolvedField errField = currentClass.findField(executionContext, "err", "Ljava/io/PrintStream;");
+            if (errField != null) {
+                errField.set(new StackObject(errStream));
+            }
+
+            // Set System.in to null for now
+            ExecutorClass.ResolvedField inField = currentClass.findField(executionContext, "in", "Ljava/io/InputStream;");
+            if (inField != null) {
+                inField.set(StackObject.NULL);
+            }
+
+            return ExecutionResult.voidResult();
+        });
         manager.registerMethodExecutor("java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             StackObject src = (StackObject) arguments[0];
             StackInt srcPos = (StackInt) arguments[1];
@@ -72,6 +103,21 @@ public class SystemNatives implements Consumer<ExecutionManager> {
             if (field == null) throw new ExecutorException(executionContext, "Could not find 'err' field in System class");
             field.set(arguments[0]);
             return ExecutionResult.voidResult();
+        });
+        manager.registerMethodExecutor("java/lang/System.getProperties()Ljava/util/Properties;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return a Properties instance
+            ExecutorClass propertiesClass = executionContext.getExecutionManager().loadClass(executionContext,
+                org.objectweb.asm.Type.getObjectType("java/util/Properties"));
+            net.lenni0451.minijvm.object.ExecutorObject properties =
+                executionContext.getExecutionManager().instantiate(executionContext, propertiesClass);
+
+            // Call Properties constructor
+            ExecutorClass.ResolvedMethod constructor = propertiesClass.findMethod(executionContext, "<init>", "()V");
+            if (constructor != null) {
+                net.lenni0451.minijvm.execution.Executor.execute(executionContext, constructor.owner(), constructor.method(), properties);
+            }
+
+            return returnValue(new StackObject(properties));
         });
     }
 

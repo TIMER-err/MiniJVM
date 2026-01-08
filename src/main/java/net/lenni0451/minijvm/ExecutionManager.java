@@ -54,6 +54,7 @@ public class ExecutionManager {
 
         this.registerMethodExecutor(null, new JVMMethodExecutor());
         this.accept(new ClassNatives());
+        this.accept(new ConstantPoolNatives());
         this.accept(new StringUTF16Natives());
         this.accept(new SystemNatives());
         this.accept(new FloatNatives());
@@ -70,6 +71,7 @@ public class ExecutionManager {
         this.accept(new FileDescriptorNatives());
         this.accept(new FileInputStreamNatives());
         this.accept(new FileOutputStreamNatives());
+        this.accept(new PrintStreamNatives());
         this.accept(new ScopedMemoryAccessNatives());
         this.accept(new SignalNatives());
         this.accept(new AccessControllerNatives());
@@ -84,6 +86,10 @@ public class ExecutionManager {
         this.accept(new StaticPropertyNatives());
         this.accept(new LocaleNatives());
         this.accept(new ProviderNatives());
+        this.accept(new PropertiesNatives());
+        this.accept(new NetworkNatives());
+        this.accept(new FileSystemNatives());
+        this.accept(new ByteBufferNatives());
     }
 
     public MemoryStorage getMemoryStorage() {

@@ -26,6 +26,30 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
         // Bypass SecureRandom static initializer
         manager.registerMethodExecutor("java/security/SecureRandom.<clinit>()V", MethodExecutor.NOOP_VOID);
 
+        // SecureRandom.getDefaultPRNG(boolean, byte[]) - bypassed
+        manager.registerMethodExecutor("java/security/SecureRandom.getDefaultPRNG(Z[B)V", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Do nothing - just return
+            return ExecutionResult.voidResult();
+        });
+
+        // SecureRandom.<init>() - constructor
+        manager.registerMethodExecutor("java/security/SecureRandom.<init>()V", (context, currentClass, currentMethod, instance, arguments) -> {
+            return ExecutionResult.voidResult();
+        });
+
+        // SecureRandom.nextBytes([B) - fill array with random bytes
+        manager.registerMethodExecutor("java/security/SecureRandom.nextBytes([B)V", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Use RandomNatives' approach
+            net.lenni0451.minijvm.object.ExecutorObject byteArray = ((net.lenni0451.minijvm.stack.StackObject) arguments[0]).value();
+            if (byteArray instanceof net.lenni0451.minijvm.object.types.ArrayObject array) {
+                java.util.Random random = new java.util.Random();
+                for (int i = 0; i < array.getElements().length; i++) {
+                    array.getElements()[i] = new net.lenni0451.minijvm.stack.StackInt(random.nextInt(256) - 128);
+                }
+            }
+            return ExecutionResult.voidResult();
+        });
+
         // Bypass Security static initializer
         manager.registerMethodExecutor("java/security/Security.<clinit>()V", MethodExecutor.NOOP_VOID);
 
@@ -38,14 +62,74 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
         // Bypass ProviderList static initializer
         manager.registerMethodExecutor("sun/security/jca/ProviderList.<clinit>()V", MethodExecutor.NOOP_VOID);
 
+        // ProviderList.providers() - returns list of providers
+        manager.registerMethodExecutor("sun/security/jca/ProviderList.providers()Ljava/util/List;", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return an empty ArrayList
+            net.lenni0451.minijvm.object.ExecutorClass arrayListClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/util/ArrayList"));
+            net.lenni0451.minijvm.object.ExecutorObject arrayList =
+                context.getExecutionManager().instantiate(context, arrayListClass);
+
+            // Call ArrayList constructor
+            net.lenni0451.minijvm.object.ExecutorClass.ResolvedMethod constructor =
+                arrayListClass.findMethod(context, "<init>", "()V");
+            if (constructor != null) {
+                net.lenni0451.minijvm.execution.Executor.execute(context, constructor.owner(), constructor.method(), arrayList);
+            }
+
+            return ExecutionResult.returnValue(new StackObject(arrayList));
+        });
+
         // Bypass Providers static initializer
         manager.registerMethodExecutor("sun/security/jca/Providers.<clinit>()V", MethodExecutor.NOOP_VOID);
+
+        // Providers.getProviderList() - returns ProviderList
+        manager.registerMethodExecutor("sun/security/jca/Providers.getProviderList()Lsun/security/jca/ProviderList;", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return a simple ProviderList instance
+            net.lenni0451.minijvm.object.ExecutorClass providerListClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("sun/security/jca/ProviderList"));
+            net.lenni0451.minijvm.object.ExecutorObject providerList =
+                context.getExecutionManager().instantiate(context, providerListClass);
+            return ExecutionResult.returnValue(new StackObject(providerList));
+        });
 
         // Bypass JCAUtil static initializer
         manager.registerMethodExecutor("sun/security/jca/JCAUtil.<clinit>()V", MethodExecutor.NOOP_VOID);
 
         // Bypass MessageDigest static initializer
         manager.registerMethodExecutor("java/security/MessageDigest.<clinit>()V", MethodExecutor.NOOP_VOID);
+
+        // MessageDigest.getInstance(String, String) - returns MessageDigest
+        manager.registerMethodExecutor("java/security/MessageDigest.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljava/security/MessageDigest;", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return a simple MessageDigest stub
+            net.lenni0451.minijvm.object.ExecutorClass messageDigestClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/security/MessageDigest"));
+            net.lenni0451.minijvm.object.ExecutorObject messageDigest =
+                context.getExecutionManager().instantiate(context, messageDigestClass);
+            return ExecutionResult.returnValue(new StackObject(messageDigest));
+        });
+
+        // MessageDigest.getInstance(String) - returns MessageDigest
+        manager.registerMethodExecutor("java/security/MessageDigest.getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;", (context, currentClass, currentMethod, instance, arguments) -> {
+            net.lenni0451.minijvm.object.ExecutorClass messageDigestClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/security/MessageDigest"));
+            net.lenni0451.minijvm.object.ExecutorObject messageDigest =
+                context.getExecutionManager().instantiate(context, messageDigestClass);
+            return ExecutionResult.returnValue(new StackObject(messageDigest));
+        });
+
+        // Bypass GetInstance static initializer
+        manager.registerMethodExecutor("sun/security/jca/GetInstance.<clinit>()V", MethodExecutor.NOOP_VOID);
+
+        // GetInstance.getInstance(...) - returns GetInstance.Instance
+        manager.registerMethodExecutor("sun/security/jca/GetInstance.getInstance(Ljava/lang/String;Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;)Lsun/security/jca/GetInstance$Instance;", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return a simple Instance stub
+            net.lenni0451.minijvm.object.ExecutorClass instanceClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("sun/security/jca/GetInstance$Instance"));
+            net.lenni0451.minijvm.object.ExecutorObject instanceObj =
+                context.getExecutionManager().instantiate(context, instanceClass);
+            return ExecutionResult.returnValue(new StackObject(instanceObj));
+        });
 
         // Bypass Signature static initializer
         manager.registerMethodExecutor("java/security/Signature.<clinit>()V", MethodExecutor.NOOP_VOID);
@@ -67,5 +151,14 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
 
         // Bypass Mac static initializer
         manager.registerMethodExecutor("javax/crypto/Mac.<clinit>()V", MethodExecutor.NOOP_VOID);
+
+        // Bypass all sun.security.provider classes
+        manager.registerMethodExecutor("sun/security/provider/SunEntries.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("sun/security/provider/Sun.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("sun/security/provider/SecureRandom.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("sun/security/provider/NativePRNG.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("sun/security/provider/SHA.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("sun/security/provider/MD5.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("sun/security/provider/DSA.<clinit>()V", MethodExecutor.NOOP_VOID);
     }
 }

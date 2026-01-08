@@ -41,6 +41,40 @@ public class ClassNatives implements Consumer<ExecutionManager> {
             ClassObject clazz = (ClassObject) instance;
             return ExecutionResult.returnValue(new StackInt(Types.isPrimitive(clazz.getClassType().getType())));
         });
+        manager.registerMethodExecutor("java/lang/Class.getRawAnnotations()[B", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return null - no annotations available in MiniJVM
+            return returnValue(StackObject.NULL);
+        });
+        manager.registerMethodExecutor("java/lang/Class.getRawTypeAnnotations()[B", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return null - no type annotations available in MiniJVM
+            return returnValue(StackObject.NULL);
+        });
+        manager.registerMethodExecutor("java/lang/Class.getConstantPool()Ljdk/internal/reflect/ConstantPool;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return a stub ConstantPool instance
+            ExecutorClass constantPoolClass = executionContext.getExecutionManager().loadClass(executionContext,
+                Type.getObjectType("jdk/internal/reflect/ConstantPool"));
+            net.lenni0451.minijvm.object.ExecutorObject constantPool =
+                executionContext.getExecutionManager().instantiate(executionContext, constantPoolClass);
+            return returnValue(new StackObject(constantPool));
+        });
+        manager.registerMethodExecutor("java/lang/Class.getSuperclass()Ljava/lang/Class;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ClassObject classObject = (ClassObject) instance;
+            ExecutorClass executorClass = classObject.getClassType();
+
+            // Get superclass name from ClassNode
+            String superName = executorClass.getClassNode().superName;
+            if (superName == null || superName.equals("java/lang/Object")) {
+                // Object has no superclass
+                return returnValue(StackObject.NULL);
+            }
+
+            // Load and return the superclass
+            ExecutorClass superClass = executionContext.getExecutionManager().loadClass(executionContext,
+                Type.getObjectType(superName));
+            net.lenni0451.minijvm.object.ExecutorObject superClassObject =
+                executionContext.getExecutionManager().instantiateClass(executionContext, superClass);
+            return returnValue(new StackObject(superClassObject));
+        });
     }
 
 }

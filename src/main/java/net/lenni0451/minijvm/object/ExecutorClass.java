@@ -85,7 +85,27 @@ public class ExecutorClass {
         for (MethodNode method : this.classNode.methods) {
             if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
                 ExecutionResult result = Executor.execute(context, this, method, null);
-                if (result.hasException()) throw new ExecutorException(context, "Could not execute static initializer of " + this.classNode.name, result.getException());
+                if (result.hasException()) {
+                    // Print detailed error for debugging
+                    System.err.println("DEBUG: Static initializer failed for " + this.classNode.name);
+                    System.err.println("DEBUG: Exception: " + result.getException().getClazz().getClassNode().name);
+                    try {
+                        ExecutorClass.ResolvedMethod getMessageMethod =
+                            result.getException().getClazz().findMethod(context, "getMessage", "()Ljava/lang/String;");
+                        if (getMessageMethod != null) {
+                            ExecutionResult msgResult = Executor.execute(context, getMessageMethod.owner(),
+                                getMessageMethod.method(), result.getException());
+                            if (msgResult.hasReturnValue() && !msgResult.getReturnValue().isNull()) {
+                                String message = net.lenni0451.minijvm.utils.ExecutorTypeUtils.fromExecutorString(context,
+                                    ((net.lenni0451.minijvm.stack.StackObject) msgResult.getReturnValue()).value());
+                                System.err.println("DEBUG: Message: " + message);
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Ignore
+                    }
+                    throw new ExecutorException(context, "Could not execute static initializer of " + this.classNode.name, result.getException());
+                }
             }
         }
         for (ExecutorClass superClass : this.superClasses.values()) superClass.invokeStaticInit(context);
