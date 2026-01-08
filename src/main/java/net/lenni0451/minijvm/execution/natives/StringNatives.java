@@ -5,6 +5,7 @@ import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.object.types.ArrayObject;
+import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackInt;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
@@ -88,7 +89,7 @@ public class StringNatives implements Consumer<ExecutionManager> {
 
         // String.<init>([BLjava/lang/String;) - constructor from byte array with charset name
         manager.registerMethodExecutor("java/lang/String.<init>([BLjava/lang/String;)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Extract bytes from the array and create a string directly
+            // Extract bytes from the array and convert to chars, then delegate to String([C) constructor
             if (!arguments[0].isNull() && ((StackObject) arguments[0]).value() instanceof ArrayObject byteArray) {
                 byte[] bytes = new byte[byteArray.getElements().length];
                 for (int i = 0; i < bytes.length; i++) {
@@ -98,14 +99,30 @@ public class StringNatives implements Consumer<ExecutionManager> {
                 // Create a Java string from bytes using UTF-8
                 String str = new String(bytes, StandardCharsets.UTF_8);
 
-                // Note: String content is set up by JVM internals
+                // Convert to char array for String([C) constructor
+                char[] chars = str.toCharArray();
+                StackElement[] charElements = new StackElement[chars.length];
+                for (int i = 0; i < chars.length; i++) {
+                    charElements[i] = new StackInt(chars[i]);
+                }
+
+                // Create char array object
+                ExecutorClass charArrayClass = context.getExecutionManager().loadClass(context, Type.getType("[C"));
+                ExecutorObject charArrayObj = context.getExecutionManager().instantiateArray(context, charArrayClass, charElements);
+
+                // Call String([C) constructor to properly initialize
+                ExecutorClass stringClass = context.getExecutionManager().loadClass(context, Type.getObjectType("java/lang/String"));
+                ExecutorClass.ResolvedMethod charConstructor = stringClass.findMethod(context, "<init>", "([C)V");
+                if (charConstructor != null) {
+                    net.lenni0451.minijvm.execution.Executor.execute(context, charConstructor.owner(), charConstructor.method(), instance, new StackObject(charArrayObj));
+                }
             }
             return ExecutionResult.voidResult();
         });
 
         // String.<init>([BLjava/nio/charset/Charset;) - constructor from byte array with charset
         manager.registerMethodExecutor("java/lang/String.<init>([BLjava/nio/charset/Charset;)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Extract bytes from the array and create a string directly
+            // Extract bytes from the array and convert to chars, then delegate to String([C) constructor
             if (!arguments[0].isNull() && ((StackObject) arguments[0]).value() instanceof ArrayObject byteArray) {
                 byte[] bytes = new byte[byteArray.getElements().length];
                 for (int i = 0; i < bytes.length; i++) {
@@ -115,14 +132,30 @@ public class StringNatives implements Consumer<ExecutionManager> {
                 // Create a Java string from bytes using UTF-8 (ignoring charset parameter)
                 String str = new String(bytes, StandardCharsets.UTF_8);
 
-                // Note: String content is set up by JVM internals
+                // Convert to char array for String([C) constructor
+                char[] chars = str.toCharArray();
+                StackElement[] charElements = new StackElement[chars.length];
+                for (int i = 0; i < chars.length; i++) {
+                    charElements[i] = new StackInt(chars[i]);
+                }
+
+                // Create char array object
+                ExecutorClass charArrayClass = context.getExecutionManager().loadClass(context, Type.getType("[C"));
+                ExecutorObject charArrayObj = context.getExecutionManager().instantiateArray(context, charArrayClass, charElements);
+
+                // Call String([C) constructor to properly initialize
+                ExecutorClass stringClass = context.getExecutionManager().loadClass(context, Type.getObjectType("java/lang/String"));
+                ExecutorClass.ResolvedMethod charConstructor = stringClass.findMethod(context, "<init>", "([C)V");
+                if (charConstructor != null) {
+                    net.lenni0451.minijvm.execution.Executor.execute(context, charConstructor.owner(), charConstructor.method(), instance, new StackObject(charArrayObj));
+                }
             }
             return ExecutionResult.voidResult();
         });
 
         // String.<init>([B) - constructor from byte array (default charset)
         manager.registerMethodExecutor("java/lang/String.<init>([B)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Extract bytes from the array and create a string directly
+            // Extract bytes from the array and convert to chars, then delegate to String([C) constructor
             if (!arguments[0].isNull() && ((StackObject) arguments[0]).value() instanceof ArrayObject byteArray) {
                 byte[] bytes = new byte[byteArray.getElements().length];
                 for (int i = 0; i < bytes.length; i++) {
@@ -132,7 +165,23 @@ public class StringNatives implements Consumer<ExecutionManager> {
                 // Create a Java string from bytes using UTF-8
                 String str = new String(bytes, StandardCharsets.UTF_8);
 
-                // Note: String content is set up by JVM internals
+                // Convert to char array for String([C) constructor
+                char[] chars = str.toCharArray();
+                StackElement[] charElements = new StackElement[chars.length];
+                for (int i = 0; i < chars.length; i++) {
+                    charElements[i] = new StackInt(chars[i]);
+                }
+
+                // Create char array object
+                ExecutorClass charArrayClass = context.getExecutionManager().loadClass(context, Type.getType("[C"));
+                ExecutorObject charArrayObj = context.getExecutionManager().instantiateArray(context, charArrayClass, charElements);
+
+                // Call String([C) constructor to properly initialize
+                ExecutorClass stringClass = context.getExecutionManager().loadClass(context, Type.getObjectType("java/lang/String"));
+                ExecutorClass.ResolvedMethod charConstructor = stringClass.findMethod(context, "<init>", "([C)V");
+                if (charConstructor != null) {
+                    net.lenni0451.minijvm.execution.Executor.execute(context, charConstructor.owner(), charConstructor.method(), instance, new StackObject(charArrayObj));
+                }
             }
             return ExecutionResult.voidResult();
         });

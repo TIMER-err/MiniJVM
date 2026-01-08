@@ -75,6 +75,50 @@ public class ClassNatives implements Consumer<ExecutionManager> {
                 executionContext.getExecutionManager().instantiateClass(executionContext, superClass);
             return returnValue(new StackObject(superClassObject));
         });
+        manager.registerMethodExecutor("java/lang/Class.getModifiers()I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ClassObject classObject = (ClassObject) instance;
+            ExecutorClass executorClass = classObject.getClassType();
+            // Return the access flags from the ClassNode
+            return returnValue(new StackInt(executorClass.getClassNode().access));
+        });
+        manager.registerMethodExecutor("java/lang/Class.getInterfaces0()[Ljava/lang/Class;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ClassObject classObject = (ClassObject) instance;
+            ExecutorClass executorClass = classObject.getClassType();
+
+            // Get interfaces from ClassNode
+            java.util.List<String> interfaces = executorClass.getClassNode().interfaces;
+            if (interfaces == null || interfaces.isEmpty()) {
+                // Return empty array
+                ExecutorClass classArrayClass = executionContext.getExecutionManager().loadClass(executionContext,
+                    Type.getType("[Ljava/lang/Class;"));
+                net.lenni0451.minijvm.object.ExecutorObject emptyArray =
+                    executionContext.getExecutionManager().instantiateArray(executionContext, classArrayClass, 0);
+                return returnValue(new StackObject(emptyArray));
+            }
+
+            // Create array of Class objects for interfaces
+            ExecutorClass classArrayClass = executionContext.getExecutionManager().loadClass(executionContext,
+                Type.getType("[Ljava/lang/Class;"));
+            net.lenni0451.minijvm.stack.StackElement[] interfaceClasses =
+                new net.lenni0451.minijvm.stack.StackElement[interfaces.size()];
+
+            for (int i = 0; i < interfaces.size(); i++) {
+                ExecutorClass interfaceClass = executionContext.getExecutionManager().loadClass(executionContext,
+                    Type.getObjectType(interfaces.get(i)));
+                net.lenni0451.minijvm.object.ExecutorObject interfaceClassObj =
+                    executionContext.getExecutionManager().instantiateClass(executionContext, interfaceClass);
+                interfaceClasses[i] = new StackObject(interfaceClassObj);
+            }
+
+            net.lenni0451.minijvm.object.ExecutorObject interfaceArray =
+                executionContext.getExecutionManager().instantiateArray(executionContext, classArrayClass, interfaceClasses);
+            return returnValue(new StackObject(interfaceArray));
+        });
+        manager.registerMethodExecutor("java/lang/Class.getMethod0(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return null to indicate method not found
+            // This will cause Class.getMethod to throw NoSuchMethodException
+            return returnValue(StackObject.NULL);
+        });
     }
 
 }
