@@ -70,12 +70,44 @@ public class CharsetNatives implements Consumer<ExecutionManager> {
 
         // Charset.newDecoder() - creates a new decoder
         manager.registerMethodExecutor("java/nio/charset/Charset.newDecoder()Ljava/nio/charset/CharsetDecoder;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a stub CharsetDecoder instance
+            // Return a UTF_8$Decoder instance that has decodeLoop implemented
             net.lenni0451.minijvm.object.ExecutorClass decoderClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/charset/CharsetDecoder"));
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("sun/nio/cs/UTF_8$Decoder"));
             net.lenni0451.minijvm.object.ExecutorObject decoder =
                 context.getExecutionManager().instantiate(context, decoderClass);
             return ExecutionResult.returnValue(new StackObject(decoder));
+        });
+
+        // CharsetDecoder.decode(ByteBuffer) - decode bytes to chars
+        manager.registerMethodExecutor("java/nio/charset/CharsetDecoder.decode(Ljava/nio/ByteBuffer;)Ljava/nio/CharBuffer;", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return null - simplified implementation
+            return ExecutionResult.returnValue(StackObject.NULL);
+        });
+
+        // CharsetDecoder.decodeLoop(ByteBuffer, CharBuffer) - internal decode loop
+        manager.registerMethodExecutor("java/nio/charset/CharsetDecoder.decodeLoop(Ljava/nio/ByteBuffer;Ljava/nio/CharBuffer;)Ljava/nio/charset/CoderResult;", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return CoderResult.UNDERFLOW (success)
+            net.lenni0451.minijvm.object.ExecutorClass coderResultClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/charset/CoderResult"));
+            // Get UNDERFLOW static field
+            net.lenni0451.minijvm.object.ExecutorClass.ResolvedField underflowField =
+                coderResultClass.findField(context, "UNDERFLOW", "Ljava/nio/charset/CoderResult;");
+            if (underflowField != null) {
+                return ExecutionResult.returnValue(underflowField.get());
+            }
+            return ExecutionResult.returnValue(StackObject.NULL);
+        });
+
+        // Register decodeLoop for UTF_8$Decoder
+        manager.registerMethodExecutor("sun/nio/cs/UTF_8$Decoder.decodeLoop(Ljava/nio/ByteBuffer;Ljava/nio/CharBuffer;)Ljava/nio/charset/CoderResult;", (context, currentClass, currentMethod, instance, arguments) -> {
+            net.lenni0451.minijvm.object.ExecutorClass coderResultClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/charset/CoderResult"));
+            net.lenni0451.minijvm.object.ExecutorClass.ResolvedField underflowField =
+                coderResultClass.findField(context, "UNDERFLOW", "Ljava/nio/charset/CoderResult;");
+            if (underflowField != null) {
+                return ExecutionResult.returnValue(underflowField.get());
+            }
+            return ExecutionResult.returnValue(StackObject.NULL);
         });
 
         // Register newEncoder/newDecoder for common Charset subclasses
@@ -102,6 +134,18 @@ public class CharsetNatives implements Consumer<ExecutionManager> {
                 net.lenni0451.minijvm.object.ExecutorObject decoder =
                     context.getExecutionManager().instantiate(context, decoderClass);
                 return ExecutionResult.returnValue(new StackObject(decoder));
+            });
+
+            // Also register decodeLoop for decoder subclasses
+            manager.registerMethodExecutor(charsetClass + ".decodeLoop(Ljava/nio/ByteBuffer;Ljava/nio/CharBuffer;)Ljava/nio/charset/CoderResult;", (context, currentClass, currentMethod, instance, arguments) -> {
+                net.lenni0451.minijvm.object.ExecutorClass coderResultClass =
+                    context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/charset/CoderResult"));
+                net.lenni0451.minijvm.object.ExecutorClass.ResolvedField underflowField =
+                    coderResultClass.findField(context, "UNDERFLOW", "Ljava/nio/charset/CoderResult;");
+                if (underflowField != null) {
+                    return ExecutionResult.returnValue(underflowField.get());
+                }
+                return ExecutionResult.returnValue(StackObject.NULL);
             });
         }
     }
