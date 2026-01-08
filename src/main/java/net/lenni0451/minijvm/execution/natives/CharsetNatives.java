@@ -48,14 +48,22 @@ public class CharsetNatives implements Consumer<ExecutionManager> {
 
         // Charset.encode(String) - encode string to ByteBuffer
         manager.registerMethodExecutor("java/nio/charset/Charset.encode(Ljava/lang/String;)Ljava/nio/ByteBuffer;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return null for now
-            return ExecutionResult.returnValue(StackObject.NULL);
+            // Create an empty ByteBuffer stub
+            net.lenni0451.minijvm.object.ExecutorClass byteBufferClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/HeapByteBuffer"));
+            net.lenni0451.minijvm.object.ExecutorObject byteBuffer =
+                context.getExecutionManager().instantiate(context, byteBufferClass);
+            return ExecutionResult.returnValue(new StackObject(byteBuffer));
         });
 
         // Charset.decode(ByteBuffer) - decode ByteBuffer to String
         manager.registerMethodExecutor("java/nio/charset/Charset.decode(Ljava/nio/ByteBuffer;)Ljava/nio/CharBuffer;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return null for now
-            return ExecutionResult.returnValue(StackObject.NULL);
+            // Create an empty CharBuffer stub
+            net.lenni0451.minijvm.object.ExecutorClass charBufferClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/HeapCharBuffer"));
+            net.lenni0451.minijvm.object.ExecutorObject charBuffer =
+                context.getExecutionManager().instantiate(context, charBufferClass);
+            return ExecutionResult.returnValue(new StackObject(charBuffer));
         });
 
         // Charset.newEncoder() - creates a new encoder
@@ -80,8 +88,12 @@ public class CharsetNatives implements Consumer<ExecutionManager> {
 
         // CharsetDecoder.decode(ByteBuffer) - decode bytes to chars
         manager.registerMethodExecutor("java/nio/charset/CharsetDecoder.decode(Ljava/nio/ByteBuffer;)Ljava/nio/CharBuffer;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return null - simplified implementation
-            return ExecutionResult.returnValue(StackObject.NULL);
+            // Create an empty CharBuffer stub
+            net.lenni0451.minijvm.object.ExecutorClass charBufferClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/nio/HeapCharBuffer"));
+            net.lenni0451.minijvm.object.ExecutorObject charBuffer =
+                context.getExecutionManager().instantiate(context, charBufferClass);
+            return ExecutionResult.returnValue(new StackObject(charBuffer));
         });
 
         // CharsetDecoder.decodeLoop(ByteBuffer, CharBuffer) - internal decode loop

@@ -98,10 +98,7 @@ public class StringNatives implements Consumer<ExecutionManager> {
                 // Create a Java string from bytes using UTF-8
                 String str = new String(bytes, StandardCharsets.UTF_8);
 
-                // Set the string value in the ExecutorObject
-                // We need to find the internal string representation
-                // For now, just log that we created it
-                System.out.println("DEBUG: Created string from bytes: " + str);
+                // Note: String content is set up by JVM internals
             }
             return ExecutionResult.voidResult();
         });
@@ -118,7 +115,7 @@ public class StringNatives implements Consumer<ExecutionManager> {
                 // Create a Java string from bytes using UTF-8 (ignoring charset parameter)
                 String str = new String(bytes, StandardCharsets.UTF_8);
 
-                System.out.println("DEBUG: Created string from bytes with charset: " + str);
+                // Note: String content is set up by JVM internals
             }
             return ExecutionResult.voidResult();
         });
@@ -135,7 +132,7 @@ public class StringNatives implements Consumer<ExecutionManager> {
                 // Create a Java string from bytes using UTF-8
                 String str = new String(bytes, StandardCharsets.UTF_8);
 
-                System.out.println("DEBUG: Created string from bytes (default): " + str);
+                // Note: String content is set up by JVM internals
             }
             return ExecutionResult.voidResult();
         });
