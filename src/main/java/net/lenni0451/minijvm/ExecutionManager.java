@@ -57,6 +57,7 @@ public class ExecutionManager {
         this.accept(new ConstantPoolNatives());
         this.accept(new AnnotationNatives());
         this.accept(new StringUTF16Natives());
+        this.accept(new StringNatives());
         this.accept(new SystemNatives());
         this.accept(new FloatNatives());
         this.accept(new DoubleNatives());

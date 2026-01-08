@@ -13,13 +13,13 @@ public class ByteBufferNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        // Bypass ByteBuffer static initializer - it's complex and involves Unsafe operations
-        manager.registerMethodExecutor("java/nio/ByteBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
-
-        // Bypass related NIO classes
+        // Bypass NIO buffer static initializers - they're complex and involve Unsafe operations
         manager.registerMethodExecutor("java/nio/Buffer.<clinit>()V", MethodExecutor.NOOP_VOID);
         manager.registerMethodExecutor("java/nio/Bits.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("java/nio/ByteBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("java/nio/CharBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
         manager.registerMethodExecutor("java/nio/HeapByteBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("java/nio/HeapCharBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
         manager.registerMethodExecutor("java/nio/DirectByteBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
         manager.registerMethodExecutor("java/nio/MappedByteBuffer.<clinit>()V", MethodExecutor.NOOP_VOID);
         manager.registerMethodExecutor("java/nio/charset/Charset.<clinit>()V", MethodExecutor.NOOP_VOID);
