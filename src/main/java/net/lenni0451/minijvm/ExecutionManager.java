@@ -79,6 +79,11 @@ public class ExecutionManager {
         this.accept(new VMNatives());
         this.accept(new SecurityNatives());
         this.accept(new AtomicNatives());
+        this.accept(new RandomNatives());
+        this.accept(new ThreadLocalNatives());
+        this.accept(new StaticPropertyNatives());
+        this.accept(new LocaleNatives());
+        this.accept(new ProviderNatives());
     }
 
     public MemoryStorage getMemoryStorage() {
