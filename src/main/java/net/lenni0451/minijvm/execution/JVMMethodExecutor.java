@@ -868,6 +868,10 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.ARRAYLENGTH:
                     array = stack.popSized(StackObject.class);
+                    if (array.isNull()) {
+                        result = ExceptionUtils.newException(context, Types.NULL_POINTER_EXCEPTION);
+                        break;
+                    }
                     if (!(array.value() instanceof ArrayObject)) {
                         String valueType = array.value() == null ? "null" : array.value().getClass().getSimpleName();
                         throw new ExecutorException(context, "Expected array but got " + array.getClass().getSimpleName() + " with value type " + valueType);

@@ -119,6 +119,11 @@ public class ClassNatives implements Consumer<ExecutionManager> {
             // This will cause Class.getMethod to throw NoSuchMethodException
             return returnValue(StackObject.NULL);
         });
+        manager.registerMethodExecutor("java/lang/Class.getEnumConstantsShared()[Ljava/lang/Object;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // For simplicity, return null to indicate no enum constants
+            // In a full implementation, this would find and invoke the values() method
+            return returnValue(StackObject.NULL);
+        });
     }
 
 }
