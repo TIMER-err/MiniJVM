@@ -120,9 +120,36 @@ public class ClassNatives implements Consumer<ExecutionManager> {
             return returnValue(StackObject.NULL);
         });
         manager.registerMethodExecutor("java/lang/Class.getEnumConstantsShared()[Ljava/lang/Object;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            // For simplicity, return null to indicate no enum constants
-            // In a full implementation, this would find and invoke the values() method
-            return returnValue(StackObject.NULL);
+            ClassObject classObject = (ClassObject) instance;
+            ExecutorClass executorClass = classObject.getClassType();
+
+            // Check if this is an enum class by checking if it extends java.lang.Enum
+            String superName = executorClass.getClassNode().superName;
+            if (superName == null || !superName.equals("java/lang/Enum")) {
+                // Not an enum, return null
+                return returnValue(StackObject.NULL);
+            }
+
+            // Try to find and invoke the static values() method
+            ExecutorClass.ResolvedMethod valuesMethod = executorClass.findMethod(executionContext, "values",
+                "()[L" + executorClass.getClassNode().name + ";");
+
+            if (valuesMethod == null) {
+                // values() method not found, return null
+                return returnValue(StackObject.NULL);
+            }
+
+            // Invoke the static values() method
+            net.lenni0451.minijvm.execution.ExecutionResult result =
+                net.lenni0451.minijvm.execution.Executor.execute(executionContext,
+                    valuesMethod.owner(), valuesMethod.method(), null);
+
+            if (result.hasException()) {
+                return result;
+            }
+
+            // Return the array of enum constants
+            return returnValue(result.getReturnValue());
         });
     }
 
