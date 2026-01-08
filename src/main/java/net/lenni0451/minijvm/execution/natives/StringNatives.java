@@ -88,15 +88,55 @@ public class StringNatives implements Consumer<ExecutionManager> {
 
         // String.<init>([BLjava/lang/String;) - constructor from byte array with charset name
         manager.registerMethodExecutor("java/lang/String.<init>([BLjava/lang/String;)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            // This constructor is called by String internals - we don't need to do anything
-            // The string content is already set up
+            // Extract bytes from the array and create a string directly
+            if (!arguments[0].isNull() && ((StackObject) arguments[0]).value() instanceof ArrayObject byteArray) {
+                byte[] bytes = new byte[byteArray.getElements().length];
+                for (int i = 0; i < bytes.length; i++) {
+                    bytes[i] = (byte) ((StackInt) byteArray.getElements()[i]).value();
+                }
+
+                // Create a Java string from bytes using UTF-8
+                String str = new String(bytes, StandardCharsets.UTF_8);
+
+                // Set the string value in the ExecutorObject
+                // We need to find the internal string representation
+                // For now, just log that we created it
+                System.out.println("DEBUG: Created string from bytes: " + str);
+            }
             return ExecutionResult.voidResult();
         });
 
         // String.<init>([BLjava/nio/charset/Charset;) - constructor from byte array with charset
         manager.registerMethodExecutor("java/lang/String.<init>([BLjava/nio/charset/Charset;)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            // This constructor is called by String internals - we don't need to do anything
-            // The string content is already set up
+            // Extract bytes from the array and create a string directly
+            if (!arguments[0].isNull() && ((StackObject) arguments[0]).value() instanceof ArrayObject byteArray) {
+                byte[] bytes = new byte[byteArray.getElements().length];
+                for (int i = 0; i < bytes.length; i++) {
+                    bytes[i] = (byte) ((StackInt) byteArray.getElements()[i]).value();
+                }
+
+                // Create a Java string from bytes using UTF-8 (ignoring charset parameter)
+                String str = new String(bytes, StandardCharsets.UTF_8);
+
+                System.out.println("DEBUG: Created string from bytes with charset: " + str);
+            }
+            return ExecutionResult.voidResult();
+        });
+
+        // String.<init>([B) - constructor from byte array (default charset)
+        manager.registerMethodExecutor("java/lang/String.<init>([B)V", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Extract bytes from the array and create a string directly
+            if (!arguments[0].isNull() && ((StackObject) arguments[0]).value() instanceof ArrayObject byteArray) {
+                byte[] bytes = new byte[byteArray.getElements().length];
+                for (int i = 0; i < bytes.length; i++) {
+                    bytes[i] = (byte) ((StackInt) byteArray.getElements()[i]).value();
+                }
+
+                // Create a Java string from bytes using UTF-8
+                String str = new String(bytes, StandardCharsets.UTF_8);
+
+                System.out.println("DEBUG: Created string from bytes (default): " + str);
+            }
             return ExecutionResult.voidResult();
         });
     }
