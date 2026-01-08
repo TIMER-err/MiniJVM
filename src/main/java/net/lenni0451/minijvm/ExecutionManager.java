@@ -55,6 +55,7 @@ public class ExecutionManager {
         this.registerMethodExecutor(null, new JVMMethodExecutor());
         this.accept(new ClassNatives());
         this.accept(new ConstantPoolNatives());
+        this.accept(new AnnotationNatives());
         this.accept(new StringUTF16Natives());
         this.accept(new SystemNatives());
         this.accept(new FloatNatives());
@@ -90,6 +91,7 @@ public class ExecutionManager {
         this.accept(new NetworkNatives());
         this.accept(new FileSystemNatives());
         this.accept(new ByteBufferNatives());
+        this.accept(new CharsetNatives());
     }
 
     public MemoryStorage getMemoryStorage() {

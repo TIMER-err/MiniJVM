@@ -713,6 +713,32 @@ public class JVMMethodExecutor implements MethodExecutor {
                             }
                         }
 
+                        // Special handling for annotation proxy objects
+                        if (net.lenni0451.minijvm.execution.natives.AnnotationNatives.isAnnotationInstance(ownerObject)) {
+                            // This is an annotation instance - return the annotation value
+                            Object rawValue = net.lenni0451.minijvm.execution.natives.AnnotationNatives.getRawAnnotationValue(ownerObject, methodInsnNode.name);
+                            if (rawValue != null) {
+                                StackElement annotationValue;
+                                if (rawValue instanceof String) {
+                                    annotationValue = ExecutorTypeUtils.parse(context, (String) rawValue);
+                                } else if (rawValue instanceof Integer) {
+                                    annotationValue = new StackInt((Integer) rawValue);
+                                } else if (rawValue instanceof Long) {
+                                    annotationValue = new StackLong((Long) rawValue);
+                                } else if (rawValue instanceof Float) {
+                                    annotationValue = new StackFloat((Float) rawValue);
+                                } else if (rawValue instanceof Double) {
+                                    annotationValue = new StackDouble((Double) rawValue);
+                                } else if (rawValue instanceof Boolean) {
+                                    annotationValue = new StackInt((Boolean) rawValue ? 1 : 0);
+                                } else {
+                                    annotationValue = StackObject.NULL;
+                                }
+                                stack.pushSized(annotationValue);
+                                break;
+                            }
+                        }
+
                         //TODO: Interface checks
                         ExecutorClass.ResolvedMethod methodNode;
                         if (opcode == Opcodes.INVOKESPECIAL) {
