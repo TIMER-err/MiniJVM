@@ -64,5 +64,17 @@ public class SharedSecretsNatives implements Consumer<ExecutionManager> {
             // Return the array of enum constants
             return returnValue(result.getReturnValue());
         });
+
+        // StreamOpFlag static initializer stub - avoid complex enum initialization
+        manager.registerMethodExecutor("java/util/stream/StreamOpFlag.<clinit>()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Skip the static initializer to avoid JavaLangAccess dependency
+            return ExecutionResult.voidResult();
+        });
+
+        // StreamOpFlag.isKnown(int) - check if flag is known
+        manager.registerMethodExecutor("java/util/stream/StreamOpFlag.isKnown(I)Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return false to indicate flag is not known (safe default)
+            return returnValue(net.lenni0451.minijvm.stack.StackInt.ZERO);
+        });
     }
 }
