@@ -76,5 +76,21 @@ public class SharedSecretsNatives implements Consumer<ExecutionManager> {
             // Return false to indicate flag is not known (safe default)
             return returnValue(net.lenni0451.minijvm.stack.StackInt.ZERO);
         });
+
+        // Bypass stream-related static initializers that may cause issues
+        String[] streamClasses = {
+            "java/util/stream/StreamSupport",
+            "java/util/stream/AbstractPipeline",
+            "java/util/stream/ReferencePipeline",
+            "java/util/stream/IntPipeline",
+            "java/util/stream/LongPipeline",
+            "java/util/stream/DoublePipeline"
+        };
+
+        for (String streamClass : streamClasses) {
+            manager.registerMethodExecutor(streamClass + ".<clinit>()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+                return ExecutionResult.voidResult();
+            });
+        }
     }
 }
