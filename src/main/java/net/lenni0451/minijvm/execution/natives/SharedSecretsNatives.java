@@ -16,16 +16,19 @@ import static net.lenni0451.minijvm.execution.ExecutionResult.returnValue;
  */
 public class SharedSecretsNatives implements Consumer<ExecutionManager> {
 
+    private static net.lenni0451.minijvm.object.ExecutorObject javaLangAccessInstance = null;
+
     @Override
     public void accept(ExecutionManager manager) {
-        // SharedSecrets.getJavaLangAccess() - returns JavaLangAccess instance
+        // SharedSecrets.getJavaLangAccess() - returns JavaLangAccess singleton
         manager.registerMethodExecutor("jdk/internal/access/SharedSecrets.getJavaLangAccess()Ljdk/internal/access/JavaLangAccess;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            // Return a stub JavaLangAccess instance
-            ExecutorClass javaLangAccessClass = executionContext.getExecutionManager().loadClass(executionContext,
-                Type.getObjectType("jdk/internal/access/JavaLangAccess"));
-            net.lenni0451.minijvm.object.ExecutorObject javaLangAccess =
-                executionContext.getExecutionManager().instantiate(executionContext, javaLangAccessClass);
-            return returnValue(new StackObject(javaLangAccess));
+            if (javaLangAccessInstance == null) {
+                // Create a singleton JavaLangAccess implementation
+                ExecutorClass javaLangAccessClass = executionContext.getExecutionManager().loadClass(executionContext,
+                    Type.getObjectType("jdk/internal/access/JavaLangAccess"));
+                javaLangAccessInstance = executionContext.getExecutionManager().instantiate(executionContext, javaLangAccessClass);
+            }
+            return returnValue(new StackObject(javaLangAccessInstance));
         });
 
         // JavaLangAccess.getEnumConstantsShared(Class) - returns enum constants
@@ -65,32 +68,18 @@ public class SharedSecretsNatives implements Consumer<ExecutionManager> {
             return returnValue(result.getReturnValue());
         });
 
-        // StreamOpFlag static initializer stub - avoid complex enum initialization
+        // StreamOpFlag static initializer - bypass to avoid JavaLangAccess dependency
         manager.registerMethodExecutor("java/util/stream/StreamOpFlag.<clinit>()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            // Skip the static initializer to avoid JavaLangAccess dependency
+            // The static initializer tries to use JavaLangAccess.getEnumConstantsShared
+            // which is complex to fully implement. We bypass it as StreamOpFlag is used
+            // internally by Stream API for optimization flags, not critical for basic operation.
             return ExecutionResult.voidResult();
         });
 
-        // StreamOpFlag.isKnown(int) - check if flag is known
+        // StreamOpFlag.isKnown() - stub for graceful handling
         manager.registerMethodExecutor("java/util/stream/StreamOpFlag.isKnown(I)Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            // Return false to indicate flag is not known (safe default)
+            // Return false (unknown flag) as safe default
             return returnValue(net.lenni0451.minijvm.stack.StackInt.ZERO);
         });
-
-        // Bypass stream-related static initializers that may cause issues
-        String[] streamClasses = {
-            "java/util/stream/StreamSupport",
-            "java/util/stream/AbstractPipeline",
-            "java/util/stream/ReferencePipeline",
-            "java/util/stream/IntPipeline",
-            "java/util/stream/LongPipeline",
-            "java/util/stream/DoublePipeline"
-        };
-
-        for (String streamClass : streamClasses) {
-            manager.registerMethodExecutor(streamClass + ".<clinit>()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-                return ExecutionResult.voidResult();
-            });
-        }
     }
 }

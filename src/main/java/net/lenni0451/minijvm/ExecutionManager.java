@@ -52,6 +52,26 @@ public class ExecutionManager {
         this.memoryStorage = new MemoryStorage();
         this.invokeDynamicCache = new InvokeDynamicCache();
 
+        // Load Stream API classes from JDK runtime
+        net.lenni0451.minijvm.utils.JdkClassLoader.loadJdkClasses(classPool,
+            "java/util/stream/Stream",
+            "java/util/stream/BaseStream",
+            "java/util/stream/StreamSupport",
+            "java/util/stream/AbstractPipeline",
+            "java/util/stream/ReferencePipeline",
+            "java/util/stream/IntStream",
+            "java/util/stream/LongStream",
+            "java/util/stream/DoubleStream",
+            "java/util/stream/IntPipeline",
+            "java/util/stream/LongPipeline",
+            "java/util/stream/DoublePipeline",
+            "java/util/stream/StreamOpFlag",
+            "java/util/stream/Sink",
+            "java/util/stream/TerminalOp",
+            "java/util/Spliterator",
+            "java/util/Spliterators"
+        );
+
         this.registerMethodExecutor(null, new JVMMethodExecutor());
         this.accept(new ClassNatives());
         this.accept(new ConstantPoolNatives());
