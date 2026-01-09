@@ -47,9 +47,23 @@ public class ClassPool {
 
     @Nullable
     public byte[] getClass(final String internalName) throws ClassNotFoundException {
+        // 1. Check our loaded classes first (highest priority)
         byte[] bytes = this.classes.get(internalName);
         if (bytes != null) return bytes;
-        return this.classProvider.getClass(internalName);
+
+        // 2. Try the provided ClassProvider (e.g., from obfuscated JAR)
+        bytes = this.classProvider.getClass(internalName);
+        if (bytes != null) return bytes;
+
+        // 3. Try to load from JDK runtime (blacklist-filtered)
+        boolean loaded = net.lenni0451.minijvm.utils.JdkClassLoader.loadJdkClass(this, internalName);
+        if (loaded) {
+            // Successfully loaded from JDK, retrieve it
+            return this.classes.get(internalName);
+        }
+
+        // Class not found anywhere
+        return null;
     }
 
     @Nullable
