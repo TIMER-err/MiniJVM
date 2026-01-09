@@ -39,6 +39,7 @@ public class ExecutionManager {
     private final Map<String, MethodExecutor> methodExecutors;
     private final MemoryStorage memoryStorage;
     private final InvokeDynamicCache invokeDynamicCache;
+    private boolean ignoreClassNotFound = false;
 
     public ExecutionManager(final ClassProvider classProvider) {
         this(new ClassPool(classProvider));
@@ -108,6 +109,14 @@ public class ExecutionManager {
         return this.invokeDynamicCache;
     }
 
+    public void setIgnoreClassNotFound(final boolean ignoreClassNotFound) {
+        this.ignoreClassNotFound = ignoreClassNotFound;
+    }
+
+    public boolean isIgnoreClassNotFound() {
+        return this.ignoreClassNotFound;
+    }
+
     public ExecutionContext newContext() {
         return new ExecutionContext(this);
     }
@@ -152,7 +161,18 @@ public class ExecutionManager {
             classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, type.getInternalName(), null, "java/lang/Object", new String[]{"java/lang/Cloneable", "java/io/Serializable"});
         } else if (type.getSort() == Type.OBJECT) {
             classNode = this.classPool.getClassNode(type.getInternalName());
-            if (classNode == null) throw new ClassNotFoundException(type.getClassName());
+            if (classNode == null) {
+                if (this.ignoreClassNotFound) {
+                    // Create a stub class for missing external dependencies
+                    if (DEBUG) {
+                        System.err.println("[WARN] Class not found, creating stub: " + type.getClassName());
+                    }
+                    classNode = new ClassNode();
+                    classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, type.getInternalName(), null, "java/lang/Object", null);
+                } else {
+                    throw new ClassNotFoundException(type.getClassName());
+                }
+            }
         } else {
             throw new ExecutorException(context, "Unsupported type: " + type.getSort() + " (" + type + ")");
         }

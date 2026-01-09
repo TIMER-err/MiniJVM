@@ -158,3 +158,19 @@ task runObfTest(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
     mainClass = 'test.ObfTestRunner'
 }
+
+task runDeobfuscator(type: JavaExec) {
+    group = 'analysis'
+    description = 'Run StringDeobfuscator on a JAR file'
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+    mainClass = 'test.StringDeobfuscator'
+
+    // Get arguments from system properties
+    def jarFile = System.getProperty('jarFile', '../catlean_1.21.11.jar')
+    def outputFile = System.getProperty('outputFile', '../catlean_output.txt')
+
+    args jarFile, outputFile
+
+    // Increase memory if needed
+    jvmArgs '-Xmx2g'
+}

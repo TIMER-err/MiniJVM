@@ -24,6 +24,7 @@ public class MethodTypeObject extends ExecutorObject {
         this.descriptor = descriptor;
         this.returnType = Type.getReturnType(descriptor);
         this.parameterTypes = Type.getArgumentTypes(descriptor);
+        initializeFormField(context);
     }
 
     public MethodTypeObject(final ExecutionContext context, final Type returnType, final Type[] parameterTypes) {
@@ -31,6 +32,31 @@ public class MethodTypeObject extends ExecutorObject {
         this.returnType = returnType;
         this.parameterTypes = parameterTypes;
         this.descriptor = Type.getMethodDescriptor(returnType, parameterTypes);
+        initializeFormField(context);
+    }
+
+    private void initializeFormField(final ExecutionContext context) {
+        try {
+            // Create a MethodTypeForm object and set it in the form field
+            ExecutorClass formClass = context.getExecutionManager().loadClass(context,
+                Type.getObjectType("java/lang/invoke/MethodTypeForm"));
+            ExecutorObject form = context.getExecutionManager().instantiate(context, formClass);
+
+            // Set the form field
+            ExecutorClass.ResolvedField formField = this.getClazz().findField(context, "form", "Ljava/lang/invoke/MethodTypeForm;");
+            if (formField != null) {
+                this.setField(formField.field(), new net.lenni0451.minijvm.stack.StackObject(form));
+            }
+
+            // Store reference to this MethodType in the form's mtCache field
+            ExecutorClass.ResolvedField mtCacheField = form.getClazz().findField(context, "mtCache", "Ljava/lang/invoke/MethodType;");
+            if (mtCacheField != null) {
+                form.setField(mtCacheField.field(), new net.lenni0451.minijvm.stack.StackObject(this));
+            }
+        } catch (Exception e) {
+            // Silently ignore if form cannot be initialized
+            // This is a best-effort initialization
+        }
     }
 
     public Type getReturnType() {

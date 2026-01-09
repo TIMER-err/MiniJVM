@@ -17,6 +17,7 @@ import static net.lenni0451.minijvm.execution.ExecutionResult.returnValue;
 public class SharedSecretsNatives implements Consumer<ExecutionManager> {
 
     private static net.lenni0451.minijvm.object.ExecutorObject javaLangAccessInstance = null;
+    private static net.lenni0451.minijvm.object.ExecutorObject javaLangRefAccessInstance = null;
 
     @Override
     public void accept(ExecutionManager manager) {
@@ -66,6 +67,26 @@ public class SharedSecretsNatives implements Consumer<ExecutionManager> {
 
             // Return the array of enum constants
             return returnValue(result.getReturnValue());
+        });
+
+        // SharedSecrets.getJavaLangRefAccess() - returns JavaLangRefAccess singleton
+        manager.registerMethodExecutor("jdk/internal/access/SharedSecrets.getJavaLangRefAccess()Ljdk/internal/access/JavaLangRefAccess;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            if (javaLangRefAccessInstance == null) {
+                // Create a singleton JavaLangRefAccess implementation
+                ExecutorClass javaLangRefAccessClass = executionContext.getExecutionManager().loadClass(executionContext,
+                    Type.getObjectType("jdk/internal/access/JavaLangRefAccess"));
+                javaLangRefAccessInstance = executionContext.getExecutionManager().instantiate(executionContext, javaLangRefAccessClass);
+            }
+            return returnValue(new StackObject(javaLangRefAccessInstance));
+        });
+
+        // JavaLangRefAccess.newNativeReferenceQueue() - creates a native reference queue
+        manager.registerMethodExecutor("jdk/internal/access/JavaLangRefAccess.newNativeReferenceQueue()Ljava/lang/ref/ReferenceQueue;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Create a stub ReferenceQueue
+            ExecutorClass refQueueClass = executionContext.getExecutionManager().loadClass(executionContext,
+                Type.getObjectType("java/lang/ref/ReferenceQueue"));
+            net.lenni0451.minijvm.object.ExecutorObject refQueue = executionContext.getExecutionManager().instantiate(executionContext, refQueueClass);
+            return returnValue(new StackObject(refQueue));
         });
     }
 }
