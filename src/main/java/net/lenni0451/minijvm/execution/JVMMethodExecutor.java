@@ -748,10 +748,24 @@ public class JVMMethodExecutor implements MethodExecutor {
                             methodNode = ownerObject.getClazz().findMethod(context, methodInsnNode.name, methodInsnNode.desc);
                         }
                         if (methodNode == null) {
-                            if (ExecutionManager.DEBUG) {
-                                System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerObject.getClazz().getClassNode().name);
+                            // Try to find a registered method executor for interface methods
+                            String methodKey = methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc;
+                            MethodExecutor methodExecutor = manager.getMethodExecutors().get(methodKey);
+
+                            if (methodExecutor != null) {
+                                // Execute via registered method executor
+                                ExecutionResult invokeResult = methodExecutor.execute(context, ownerObject.getClazz(), null, ownerObject, stackElements.toArray(new StackElement[0]));
+                                if (invokeResult.hasReturnValue()) {
+                                    stack.pushSized(invokeResult.getReturnValue());
+                                } else if (invokeResult.hasException()) {
+                                    result = invokeResult;
+                                }
+                            } else {
+                                if (ExecutionManager.DEBUG) {
+                                    System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerObject.getClazz().getClassNode().name);
+                                }
+                                result = ExceptionUtils.newException(context, Types.NO_SUCH_METHOD_ERROR, methodInsnNode.name);
                             }
-                            result = ExceptionUtils.newException(context, Types.NO_SUCH_METHOD_ERROR, methodInsnNode.name);
                         } else if (Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
                             result = ExceptionUtils.newException(context, Types.INCOMPATIBLE_CLASS_CHANGE_ERROR, "Expecting non-static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
                         } else {

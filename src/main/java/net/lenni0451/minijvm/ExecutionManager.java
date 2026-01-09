@@ -120,6 +120,10 @@ public class ExecutionManager {
         this.methodExecutors.put(classMethodDescriptor, methodExecutor);
     }
 
+    public Map<String, MethodExecutor> getMethodExecutors() {
+        return this.methodExecutors;
+    }
+
     public MethodExecutor getMethodExecutor(final ExecutionContext context, final String owner, final MethodNode methodNode) {
         MethodExecutor methodExecutor = this.methodExecutors.get(owner + "." + methodNode.name + methodNode.desc);
         if (methodExecutor != null) return methodExecutor;
