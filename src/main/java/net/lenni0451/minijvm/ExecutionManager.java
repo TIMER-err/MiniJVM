@@ -98,6 +98,7 @@ public class ExecutionManager {
         this.accept(new ByteBufferNatives());
         this.accept(new CharsetNatives());
         this.accept(new SharedSecretsNatives());
+        this.accept(new CryptoNatives());
     }
 
     public MemoryStorage getMemoryStorage() {
