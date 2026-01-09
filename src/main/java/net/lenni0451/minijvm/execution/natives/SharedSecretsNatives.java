@@ -67,19 +67,5 @@ public class SharedSecretsNatives implements Consumer<ExecutionManager> {
             // Return the array of enum constants
             return returnValue(result.getReturnValue());
         });
-
-        // StreamOpFlag static initializer - bypass to avoid JavaLangAccess dependency
-        manager.registerMethodExecutor("java/util/stream/StreamOpFlag.<clinit>()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            // The static initializer tries to use JavaLangAccess.getEnumConstantsShared
-            // which is complex to fully implement. We bypass it as StreamOpFlag is used
-            // internally by Stream API for optimization flags, not critical for basic operation.
-            return ExecutionResult.voidResult();
-        });
-
-        // StreamOpFlag.isKnown() - stub for graceful handling
-        manager.registerMethodExecutor("java/util/stream/StreamOpFlag.isKnown(I)Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            // Return false (unknown flag) as safe default
-            return returnValue(net.lenni0451.minijvm.stack.StackInt.ZERO);
-        });
     }
 }
