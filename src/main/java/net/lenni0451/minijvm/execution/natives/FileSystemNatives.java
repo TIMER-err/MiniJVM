@@ -45,6 +45,12 @@ public class FileSystemNatives implements Consumer<ExecutionManager> {
             return ExecutionResult.returnValue(new StackInt(0x01));
         });
 
+        // UnixFileSystem.getBooleanAttributes0(File) - get file attributes (different signature)
+        manager.registerMethodExecutor("java/io/UnixFileSystem.getBooleanAttributes0(Ljava/io/File;)I", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Return exists flag (0x01)
+            return ExecutionResult.returnValue(new StackInt(0x01));
+        });
+
         // UnixFileSystem.checkAccess(File, int) - check file access
         manager.registerMethodExecutor("java/io/UnixFileSystem.checkAccess(Ljava/io/File;I)Z", (context, currentClass, currentMethod, instance, arguments) -> {
             // Return true - access allowed

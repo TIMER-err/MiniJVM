@@ -23,7 +23,8 @@ public class JdkClassLoader {
         // String and encoding
         BLACKLIST.add("java/lang/String");
         BLACKLIST.add("java/lang/StringUTF16");
-        BLACKLIST.add("java/lang/StringLatin1");
+        // StringLatin1 removed - use JDK implementation
+        // BLACKLIST.add("java/lang/StringLatin1");
 
         // Core classes with special native handling
         BLACKLIST.add("java/lang/Class");

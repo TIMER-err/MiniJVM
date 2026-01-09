@@ -119,6 +119,17 @@ public class SystemNatives implements Consumer<ExecutionManager> {
 
             return returnValue(new StackObject(properties));
         });
+
+        // System.identityHashCode(Object) - returns identity hash code
+        manager.registerMethodExecutor("java/lang/System.identityHashCode(Ljava/lang/Object;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            StackObject obj = (StackObject) arguments[0];
+            if (obj == null || obj.isNull()) {
+                return returnValue(new StackInt(0));
+            }
+            // Use Java's identity hash code for the ExecutorObject
+            int hashCode = System.identityHashCode(obj.value());
+            return returnValue(new StackInt(hashCode));
+        });
     }
 
 }

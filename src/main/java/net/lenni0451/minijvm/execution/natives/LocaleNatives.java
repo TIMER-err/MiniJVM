@@ -43,8 +43,23 @@ public class LocaleNatives implements Consumer<ExecutionManager> {
         // Bypass LocaleObjectCache static initializer
         manager.registerMethodExecutor("sun/util/locale/LocaleObjectCache.<clinit>()V", MethodExecutor.NOOP_VOID);
 
-        // Bypass Locale's static initializer
-        manager.registerMethodExecutor("java/util/Locale.<clinit>()V", MethodExecutor.NOOP_VOID);
+        // Bypass Locale's static initializer but manually initialize ENGLISH field
+        manager.registerMethodExecutor("java/util/Locale.<clinit>()V", (context, currentClass, currentMethod, instance, arguments) -> {
+            // Create a Locale instance for ENGLISH
+            net.lenni0451.minijvm.object.ExecutorClass localeClass =
+                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/util/Locale"));
+            net.lenni0451.minijvm.object.ExecutorObject englishLocale =
+                context.getExecutionManager().instantiate(context, localeClass);
+
+            // Set the ENGLISH static field
+            net.lenni0451.minijvm.object.ExecutorClass.ResolvedField englishField =
+                localeClass.findField(context, "ENGLISH", "Ljava/util/Locale;");
+            if (englishField != null) {
+                localeClass.setStaticField(englishField.field(), new net.lenni0451.minijvm.stack.StackObject(englishLocale));
+            }
+
+            return net.lenni0451.minijvm.execution.ExecutionResult.voidResult();
+        });
 
         // Locale() constructor
         manager.registerMethodExecutor("java/util/Locale.<init>(Lsun/util/locale/BaseLocale;Lsun/util/locale/LocaleExtensions;)V", (context, currentClass, currentMethod, instance, arguments) -> {

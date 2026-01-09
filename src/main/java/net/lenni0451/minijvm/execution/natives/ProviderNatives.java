@@ -15,8 +15,8 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        // Bypass Provider's static initializer
-        manager.registerMethodExecutor("java/security/Provider.<clinit>()V", MethodExecutor.NOOP_VOID);
+        // Removed: Let Provider's static initializer run (Locale.ENGLISH is now properly initialized)
+        // manager.registerMethodExecutor("java/security/Provider.<clinit>()V", MethodExecutor.NOOP_VOID);
 
         // Provider constructor
         manager.registerMethodExecutor("java/security/Provider.<init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", (context, currentClass, currentMethod, instance, arguments) -> {
@@ -50,8 +50,8 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
             return ExecutionResult.voidResult();
         });
 
-        // Bypass Security static initializer
-        manager.registerMethodExecutor("java/security/Security.<clinit>()V", MethodExecutor.NOOP_VOID);
+        // Removed: Let Security's static initializer run to register crypto providers
+        // manager.registerMethodExecutor("java/security/Security.<clinit>()V", MethodExecutor.NOOP_VOID);
 
         // Security.getProperty(String) - returns security property
         manager.registerMethodExecutor("java/security/Security.getProperty(Ljava/lang/String;)Ljava/lang/String;", (context, currentClass, currentMethod, instance, arguments) -> {
@@ -59,39 +59,9 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
             return ExecutionResult.returnValue(StackObject.NULL);
         });
 
-        // Bypass ProviderList static initializer
-        manager.registerMethodExecutor("sun/security/jca/ProviderList.<clinit>()V", MethodExecutor.NOOP_VOID);
-
-        // ProviderList.providers() - returns list of providers
-        manager.registerMethodExecutor("sun/security/jca/ProviderList.providers()Ljava/util/List;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return an empty ArrayList
-            net.lenni0451.minijvm.object.ExecutorClass arrayListClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/util/ArrayList"));
-            net.lenni0451.minijvm.object.ExecutorObject arrayList =
-                context.getExecutionManager().instantiate(context, arrayListClass);
-
-            // Call ArrayList constructor
-            net.lenni0451.minijvm.object.ExecutorClass.ResolvedMethod constructor =
-                arrayListClass.findMethod(context, "<init>", "()V");
-            if (constructor != null) {
-                net.lenni0451.minijvm.execution.Executor.execute(context, constructor.owner(), constructor.method(), arrayList);
-            }
-
-            return ExecutionResult.returnValue(new StackObject(arrayList));
-        });
-
-        // Bypass Providers static initializer
-        manager.registerMethodExecutor("sun/security/jca/Providers.<clinit>()V", MethodExecutor.NOOP_VOID);
-
-        // Providers.getProviderList() - returns ProviderList
-        manager.registerMethodExecutor("sun/security/jca/Providers.getProviderList()Lsun/security/jca/ProviderList;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a simple ProviderList instance
-            net.lenni0451.minijvm.object.ExecutorClass providerListClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("sun/security/jca/ProviderList"));
-            net.lenni0451.minijvm.object.ExecutorObject providerList =
-                context.getExecutionManager().instantiate(context, providerListClass);
-            return ExecutionResult.returnValue(new StackObject(providerList));
-        });
+        // Removed: Let ProviderList and Providers initialize properly to enable real crypto providers
+        // manager.registerMethodExecutor("sun/security/jca/ProviderList.<clinit>()V", MethodExecutor.NOOP_VOID);
+        // manager.registerMethodExecutor("sun/security/jca/Providers.<clinit>()V", MethodExecutor.NOOP_VOID);
 
         // Bypass JCAUtil static initializer
         manager.registerMethodExecutor("sun/security/jca/JCAUtil.<clinit>()V", MethodExecutor.NOOP_VOID);
@@ -99,24 +69,7 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
         // Bypass MessageDigest static initializer
         manager.registerMethodExecutor("java/security/MessageDigest.<clinit>()V", MethodExecutor.NOOP_VOID);
 
-        // MessageDigest.getInstance(String, String) - returns MessageDigest
-        manager.registerMethodExecutor("java/security/MessageDigest.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljava/security/MessageDigest;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a simple MessageDigest stub
-            net.lenni0451.minijvm.object.ExecutorClass messageDigestClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/security/MessageDigest"));
-            net.lenni0451.minijvm.object.ExecutorObject messageDigest =
-                context.getExecutionManager().instantiate(context, messageDigestClass);
-            return ExecutionResult.returnValue(new StackObject(messageDigest));
-        });
-
-        // MessageDigest.getInstance(String) - returns MessageDigest
-        manager.registerMethodExecutor("java/security/MessageDigest.getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;", (context, currentClass, currentMethod, instance, arguments) -> {
-            net.lenni0451.minijvm.object.ExecutorClass messageDigestClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("java/security/MessageDigest"));
-            net.lenni0451.minijvm.object.ExecutorObject messageDigest =
-                context.getExecutionManager().instantiate(context, messageDigestClass);
-            return ExecutionResult.returnValue(new StackObject(messageDigest));
-        });
+        // Removed MessageDigest stubs - let JDK's real MessageDigest implementations work
 
         // Bypass GetInstance static initializer
         manager.registerMethodExecutor("sun/security/jca/GetInstance.<clinit>()V", MethodExecutor.NOOP_VOID);
@@ -152,74 +105,7 @@ public class ProviderNatives implements Consumer<ExecutionManager> {
         // Bypass Mac static initializer
         manager.registerMethodExecutor("javax/crypto/Mac.<clinit>()V", MethodExecutor.NOOP_VOID);
 
-        // KeyGenerator.getInstance(String) - returns KeyGenerator
-        manager.registerMethodExecutor("javax/crypto/KeyGenerator.getInstance(Ljava/lang/String;)Ljavax/crypto/KeyGenerator;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a stub KeyGenerator instance
-            net.lenni0451.minijvm.object.ExecutorClass keyGenClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("javax/crypto/KeyGenerator"));
-            net.lenni0451.minijvm.object.ExecutorObject keyGen =
-                context.getExecutionManager().instantiate(context, keyGenClass);
-            return ExecutionResult.returnValue(new StackObject(keyGen));
-        });
-
-        // KeyGenerator.init(int) - initialize with key size
-        manager.registerMethodExecutor("javax/crypto/KeyGenerator.init(I)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            return ExecutionResult.voidResult();
-        });
-
-        // KeyGenerator.generateKey() - generate a secret key
-        manager.registerMethodExecutor("javax/crypto/KeyGenerator.generateKey()Ljavax/crypto/SecretKey;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a stub SecretKey instance
-            net.lenni0451.minijvm.object.ExecutorClass secretKeyClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("javax/crypto/spec/SecretKeySpec"));
-            net.lenni0451.minijvm.object.ExecutorObject secretKey =
-                context.getExecutionManager().instantiate(context, secretKeyClass);
-            return ExecutionResult.returnValue(new StackObject(secretKey));
-        });
-
-        // SecretKeySpec.<init>([BLjava/lang/String;) - constructor
-        manager.registerMethodExecutor("javax/crypto/spec/SecretKeySpec.<init>([BLjava/lang/String;)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            return ExecutionResult.voidResult();
-        });
-
-        // SecretKeySpec.getEncoded() - returns key bytes
-        manager.registerMethodExecutor("javax/crypto/spec/SecretKeySpec.getEncoded()[B", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a dummy 16-byte array (128-bit key)
-            net.lenni0451.minijvm.object.ExecutorClass byteArrayClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getType("[B"));
-            net.lenni0451.minijvm.object.ExecutorObject byteArray =
-                context.getExecutionManager().instantiateArray(context, byteArrayClass, 16);
-
-            // Fill with some dummy data
-            if (byteArray instanceof net.lenni0451.minijvm.object.types.ArrayObject array) {
-                java.util.Random random = new java.util.Random(12345); // Fixed seed for reproducibility
-                for (int i = 0; i < 16; i++) {
-                    array.getElements()[i] = new net.lenni0451.minijvm.stack.StackInt(random.nextInt(256) - 128);
-                }
-            }
-            return ExecutionResult.returnValue(new StackObject(byteArray));
-        });
-
-        // Cipher.getInstance(String) - returns Cipher
-        manager.registerMethodExecutor("javax/crypto/Cipher.getInstance(Ljava/lang/String;)Ljavax/crypto/Cipher;", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return a stub Cipher instance
-            net.lenni0451.minijvm.object.ExecutorClass cipherClass =
-                context.getExecutionManager().loadClass(context, org.objectweb.asm.Type.getObjectType("javax/crypto/Cipher"));
-            net.lenni0451.minijvm.object.ExecutorObject cipher =
-                context.getExecutionManager().instantiate(context, cipherClass);
-            return ExecutionResult.returnValue(new StackObject(cipher));
-        });
-
-        // Cipher.init(ILjava/security/Key;) - initialize cipher
-        manager.registerMethodExecutor("javax/crypto/Cipher.init(ILjava/security/Key;)V", (context, currentClass, currentMethod, instance, arguments) -> {
-            return ExecutionResult.voidResult();
-        });
-
-        // Cipher.doFinal([B)[B - encrypt/decrypt
-        manager.registerMethodExecutor("javax/crypto/Cipher.doFinal([B)[B", (context, currentClass, currentMethod, instance, arguments) -> {
-            // Return the input bytes as-is (dummy encryption/decryption)
-            return ExecutionResult.returnValue(arguments[0]);
-        });
+        // Removed Cipher and KeyGenerator stubs - let JDK's real crypto implementations work
 
         // Bypass all sun.security.provider classes
         manager.registerMethodExecutor("sun/security/provider/SunEntries.<clinit>()V", MethodExecutor.NOOP_VOID);

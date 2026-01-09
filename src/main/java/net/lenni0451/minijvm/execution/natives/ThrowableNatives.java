@@ -15,6 +15,12 @@ public class ThrowableNatives implements Consumer<ExecutionManager> {
             //TODO: Implement fillInStackTrace
             return returnValue(new StackObject(instance));
         });
+
+        // NullPointerException.getExtendedNPEMessage() - returns detailed NPE message (Java 14+)
+        manager.registerMethodExecutor("java/lang/NullPointerException.getExtendedNPEMessage()Ljava/lang/String;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Return null - no extended message
+            return returnValue(StackObject.NULL);
+        });
     }
 
 }

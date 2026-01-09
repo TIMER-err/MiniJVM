@@ -27,6 +27,10 @@ public class FileDescriptorNatives implements Consumer<ExecutionManager> {
                 throw new ExecutorException(executionContext, "TODO - Invalid file descriptor: " + id);
             }
         });
+        manager.registerMethodExecutor("java/io/FileDescriptor.close0()V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            // Dummy close implementation - just return
+            return ExecutionResult.voidResult();
+        });
     }
 
 }
